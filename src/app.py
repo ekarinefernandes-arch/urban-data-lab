@@ -1,6 +1,9 @@
 import pandas as pd
+from pathlib import Path
 
 from modules.ibge import consultar
+
+BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 url = (
@@ -34,8 +37,15 @@ tabela = pd.DataFrame(
 
 print(tabela)
 
+arquivo_saida = (
+    BASE_DIR
+    / "data"
+    / "processed"
+    / "populacao_maringa_2021.csv"
+)
+
 tabela.to_csv(
-    "../data/processed/populacao_maringa_2021.csv",
+    arquivo_saida,
     index=False,
     encoding="utf-8-sig"
 )
