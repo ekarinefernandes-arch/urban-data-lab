@@ -1,0 +1,168 @@
+from pathlib import Path
+
+import pandas as pd
+
+
+def localizar_csv(pasta: Path) -> Path:
+    """
+    Localiza o arquivo CSV dos dados básicos do Censo 2022.
+
+    A busca é feita dentro da pasta informada e de todas
+    as suas subpastas.
+    """
+
+    pasta = Path(pasta)
+
+    if not pasta.exists():
+        raise FileNotFoundError(
+            f"A pasta informada não existe:\n{pasta}"
+        )
+
+    arquivos_csv = list(
+        pasta.rglob("Agregados_por_setores_basico_BR.csv")
+    )
+
+    if not arquivos_csv:
+        arquivos_csv = list(pasta.rglob("*.csv"))
+
+    if not arquivos_csv:
+        raise FileNotFoundError(
+            f"Nenhum arquivo CSV foi encontrado em:\n{pasta}"
+        )
+
+    return arquivos_csv[0]
+
+
+def carregar_dados_censo(
+    caminho_csv: Path,
+) -> pd.DataFrame:
+    """
+    Carrega o arquivo CSV dos dados básicos do Censo 2022.
+
+    A função testa combinações de codificação e separador
+    para evitar erros de leitura.
+    """
+
+    caminho_csv = Path(caminho_csv)
+
+    if not caminho_csv.exists():
+        raise FileNotFoundError(
+            f"O arquivo CSV não foi encontrado:\n{caminho_csv}"
+        )
+
+    configuracoes = [
+        {
+            "sep": ";",
+            "encoding": "utf-8",
+        },
+        {
+            "sep": ";",
+            "encoding": "latin-1",
+        },
+        {
+            "sep": ",",
+            "encoding": "utf-8",
+        },
+        {
+            "sep": ",",
+            "encoding": "latin-1",
+        },
+    ]
+
+    ultimo_erro = None
+
+    for configuracao in configuracoes:
+        try:
+            dados = pd.read_csv(
+                caminho_csv,
+                sep=configuracao["sep"],
+                encoding=configuracao["encoding"],
+                dtype=str,
+                low_memory=False,
+            )
+
+            if len(dados.columns) > 1:
+                print(
+                    "Dados do Censo carregados com sucesso."
+                )
+                print(
+                    f"Quantidade de registros: {len(dados)}"
+                )
+                print(
+                    f"Quantidade de colunas: {len(dados.columns)}"
+                )
+
+                return dados
+
+        except Exception as erro:
+            ultimo_erro = erro
+
+    raise ValueError(
+        "Não foi possível carregar o arquivo CSV.\n"
+        f"Arquivo: {caminho_csv}\n"
+        f"Último erro encontrado: {ultimo_erro}"
+    )
+
+
+def filtrar_dados_municipio(
+    dados: pd.DataFrame,
+    municipio: str,
+) -> pd.DataFrame:
+    """
+    Filtra os dados censitários pelo nome ou pelo código IBGE
+    do município.
+
+    Exemplos:
+        filtrar_dados_municipio(dados, "Maringá")
+        filtrar_dados_municipio(dados, "4115200")
+    """
+
+    municipio = str(municipio).strip()
+
+    colunas_obrigatorias = {
+        "CD_MUN",
+        "NM_MUN",
+    }
+
+    colunas_ausentes = (
+        colunas_obrigatorias - set(dados.columns)
+    )
+
+    if colunas_ausentes:
+        raise KeyError(
+            "As seguintes colunas não foram encontradas "
+            f"nos dados: {sorted(colunas_ausentes)}"
+        )
+
+    if municipio.isdigit():
+        resultado = dados[
+            dados["CD_MUN"]
+            .astype(str)
+            .str.strip()
+            == municipio
+        ].copy()
+
+    else:
+        resultado = dados[
+            dados["NM_MUN"]
+            .astype(str)
+            .str.strip()
+            .str.casefold()
+            == municipio.casefold()
+        ].copy()
+
+    if resultado.empty:
+        raise ValueError(
+            "Nenhum dado censitário foi encontrado para "
+            f"o município: {municipio}"
+        )
+
+    print(
+        f"Município encontrado: "
+        f"{resultado['NM_MUN'].iloc[0]}"
+    )
+    print(
+        f"Quantidade de setores: {len(resultado)}"
+    )
+
+    return resultado

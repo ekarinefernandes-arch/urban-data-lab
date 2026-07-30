@@ -1,7 +1,7 @@
 import pandas as pd
 from pathlib import Path
 
-from modules.ibge import consultar
+from src.modules.ibge.api import consultar
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
