@@ -4,6 +4,8 @@
 # Cache do Python
 __pycache__/
 *.py[cod]
+.pytest_tmp/
+.test_artifacts/
 
 # Configurações locais do VS Code
 .vscode/
@@ -21,3 +23,5 @@ data/exports/*
 !data/raw/.gitkeep
 !data/processed/.gitkeep
 !data/exports/.gitkeep
+
+ATLAS.md

@@ -1,6 +1,5 @@
 import pandas as pd
 
-
 def preparar_populacao(
     dados: pd.DataFrame,
 ) -> pd.DataFrame:
@@ -36,42 +35,3 @@ def preparar_populacao(
     )
 
     return populacao
-
-def preparar_renda(
-    dados_municipio,
-    coluna_renda,
-):
-    renda = dados_municipio[
-        [
-            "CD_SETOR",
-            coluna_renda,
-        ]
-    ].copy()
-
-    renda = renda.rename(
-        columns={
-            coluna_renda: "renda_media",
-        }
-    )
-
-    renda["CD_SETOR"] = (
-        renda["CD_SETOR"]
-        .astype(str)
-        .str.strip()
-    )
-
-    renda["renda_media"] = (
-        renda["renda_media"]
-        .astype(str)
-        .str.replace(",", ".", regex=False)
-    )
-
-    renda["renda_media"] = (
-        renda["renda_media"]
-        .pipe(
-            __import__("pandas").to_numeric,
-            errors="coerce",
-        )
-    )
-
-    return renda

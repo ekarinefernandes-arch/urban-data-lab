@@ -1,5 +1,8 @@
 # Urban Data Lab
 
+O padrão de pastas e a identidade visual dos mapas estão descritos em
+[`docs/ESTILO_CARTOGRAFICO.md`](docs/ESTILO_CARTOGRAFICO.md).
+
 Biblioteca em Python para análise de dados urbanos utilizando bases oficiais do IBGE e dados geoespaciais.
 
 O projeto tem como objetivo construir uma plataforma modular para leitura, tratamento, integração e visualização de dados territoriais, servindo de base para estudos de planejamento urbano, geoprocessamento, mercado imobiliário e Planta Genérica de Valores (PGV).

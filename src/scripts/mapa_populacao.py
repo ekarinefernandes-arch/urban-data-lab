@@ -1,21 +1,27 @@
+import sys
 from pathlib import Path
 
+PROJETO_SRC = Path(__file__).resolve().parents[1]
+if str(PROJETO_SRC) not in sys.path:
+    sys.path.insert(0, str(PROJETO_SRC))
 
-from modules.ibge.censo import (
-    carregar_dados_censo,
-    filtrar_dados_municipio,
-    localizar_csv,
-)
-from src.modules.visualizacao.mapas import (
-    exportar_gpkg,
-    plotar_mapa,
+from modules.config import (
+    PASTA_BASICO,
+    PASTA_EXPORTACOES_GPKG,
+    PASTA_EXPORTACOES_MAPAS,
 )
 from modules.ibge.geografia import (
     carregar_malha,
     filtrar_municipio,
+    localizar_arquivo_geografia,
 )
-from modules.ibge.indicadores import preparar_populacao
-
+from modules.ibge.pipeline import construir_dataset_populacao
+from modules.visualizacao.mapas import (
+    calcular_densidade_populacional,
+    exportar_gpkg,
+    plotar_mapa,
+    preparar_mapa_tematico,
+)
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -25,21 +31,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # CAMINHOS DOS ARQUIVOS
 # --------------------------------------------------
 
-arquivo_malha = (
-    BASE_DIR
-    / "data"
-    / "raw"
-    / "geografia"
-    / "PR_setores_CD2022.gpkg"
-)
-
-pasta_censo = (
-    BASE_DIR
-    / "data"
-    / "raw"
-    / "censo"
-    / "basico"
-)
+arquivo_malha = localizar_arquivo_geografia()
+pasta_censo = PASTA_BASICO
 
 
 # --------------------------------------------------
@@ -80,21 +73,9 @@ malha_municipio["CD_SETOR"] = (
 # CARREGAMENTO DOS DADOS DO CENSO
 # --------------------------------------------------
 
-arquivo_csv = localizar_csv(
-    pasta_censo
-)
-
-dados_censo = carregar_dados_censo(
-    arquivo_csv
-)
-
-dados_municipio = filtrar_dados_municipio(
-    dados_censo,
-    municipio_informado,
-)
-
-populacao = preparar_populacao(
-    dados_municipio
+populacao = construir_dataset_populacao(
+    caminho_csv=pasta_censo / "Agregados_por_setores_basico_BR.csv",
+    municipio=municipio_informado,
 )
 
 
@@ -102,11 +83,13 @@ populacao = preparar_populacao(
 # UNIÃO ENTRE DADOS E GEOMETRIA
 # --------------------------------------------------
 
-mapa = malha_municipio.merge(
-    populacao,
-    on="CD_SETOR",
-    how="left",
+mapa = preparar_mapa_tematico(
+    malha=malha_municipio,
+    indicadores=populacao,
+    coluna_indicador="populacao",
+    chave="CD_SETOR",
 )
+mapa = calcular_densidade_populacional(mapa)
 
 nome_municipio = (
     malha_municipio["NM_MUN"].iloc[0]
@@ -117,12 +100,7 @@ nome_municipio = (
 # EXPORTAÇÃO PARA O QGIS
 # --------------------------------------------------
 
-pasta_exportacao = (
-    BASE_DIR
-    / "data"
-    / "exports"
-    / "geopackage"
-)
+pasta_exportacao = PASTA_EXPORTACOES_GPKG / "populacao"
 
 pasta_exportacao.mkdir(
     parents=True,
@@ -179,9 +157,17 @@ print(
 
 plotar_mapa(
     mapa=mapa,
-    coluna="populacao",
+    coluna="densidade_pop_km2",
     titulo=(
         f"População por setor censitário — {nome_municipio}\n"
         "Censo Demográfico 2022"
     ),
+    legenda_titulo="Habitantes por km² (quantis)",
+    arquivo_saida=(
+        PASTA_EXPORTACOES_MAPAS
+        / "populacao"
+        / f"populacao_{nome_arquivo}.png"
+    ),
+    subtitulo="Densidade populacional por setor censitário",
+    tema="densidade",
 )

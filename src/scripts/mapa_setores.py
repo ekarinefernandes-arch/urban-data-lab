@@ -2,18 +2,16 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 
-from src.modules.ibge.geografia import carregar_malha, filtrar_municipio
+from src.modules.ibge.geografia import (
+    carregar_malha,
+    filtrar_municipio,
+    localizar_arquivo_geografia,
+)
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-arquivo = (
-    BASE_DIR
-    / "data"
-    / "raw"
-    / "geografia"
-    / "PR_setores_CD2022.gpkg"
-)
+arquivo = localizar_arquivo_geografia()
 
 malha = carregar_malha(arquivo)
 

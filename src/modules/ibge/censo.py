@@ -1,6 +1,8 @@
 from pathlib import Path
+import unicodedata
 
 import pandas as pd
+from modules.config import PASTA_BASICO
 
 
 def localizar_csv(pasta: Path) -> Path:
@@ -143,12 +145,12 @@ def filtrar_dados_municipio(
         ].copy()
 
     else:
+        municipio_normalizado = _normalizar_texto(municipio)
         resultado = dados[
             dados["NM_MUN"]
             .astype(str)
-            .str.strip()
-            .str.casefold()
-            == municipio.casefold()
+            .map(_normalizar_texto)
+            == municipio_normalizado
         ].copy()
 
     if resultado.empty:
@@ -166,3 +168,51 @@ def filtrar_dados_municipio(
     )
 
     return resultado
+
+
+def _normalizar_texto(valor: str) -> str:
+    texto = str(valor).strip()
+    texto = unicodedata.normalize("NFKD", texto)
+    texto = "".join(
+        caractere
+        for caractere in texto
+        if unicodedata.category(caractere) != "Mn"
+    )
+    return texto.casefold()
+
+
+def obter_codigo_municipio(
+    municipio: str,
+    caminho_csv: Path | None = None,
+) -> str:
+    municipio = str(municipio).strip()
+
+    if municipio.isdigit():
+        if len(municipio) != 7:
+            raise ValueError(
+                "O código do município deve possuir exatamente sete dígitos."
+            )
+        return municipio
+
+    caminho_arquivo = (
+        Path(caminho_csv)
+        if caminho_csv is not None
+        else localizar_csv(PASTA_BASICO)
+    )
+    dados_censo = carregar_dados_censo(caminho_arquivo)
+    dados_municipio = filtrar_dados_municipio(dados_censo, municipio)
+
+    codigos = (
+        dados_municipio["CD_MUN"]
+        .astype(str)
+        .str.strip()
+        .unique()
+    )
+
+    if len(codigos) > 1:
+        raise ValueError(
+            "O nome do município é ambíguo e corresponde a mais de um código IBGE. "
+            "Informe o código IBGE ou passe o nome com a sigla do estado."
+        )
+
+    return codigos[0]
