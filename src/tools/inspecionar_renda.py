@@ -4,7 +4,7 @@ import pandas as pd
 
 
 # Caminho da raiz do projeto
-RAIZ_PROJETO = Path(__file__).resolve().parent.parent
+RAIZ_PROJETO = Path(__file__).resolve().parents[2]
 
 # Caminho completo do arquivo de renda
 ARQUIVO_RENDA = (
@@ -92,6 +92,19 @@ def main() -> None:
 
     # Testa a leitura do arquivo
     df, separador, codificacao = testar_leitura(ARQUIVO_RENDA)
+
+    df = df.rename(
+    columns={
+            "V06001": "qtd_responsaveis",
+            "V06002": "qtd_moradores",
+            "V06003": "media_moradores_domicilio",
+            "V06004": "renda_media_responsavel",
+            "V06005": "soma_renda_responsaveis",
+            "V06006": "renda_mediana_responsavel",
+    }
+    )
+
+    print(df.columns)
 
     print("\n" + "-" * 70)
     print("CONFIGURAÇÃO DE LEITURA")

@@ -25,6 +25,7 @@ from modules.ibge.cruzamento import (
 )
 from modules.visualizacao.mapas import (
     exportar_gpkg,
+    obter_textos_padronizados,
     plotar_mapa,
     preparar_mapa_tematico,
 )
@@ -44,15 +45,15 @@ def carregar_malha_por_estado(municipio: str, estado: str | None = None) -> obje
 
 def montar_titulo(tipo: str, municipio: str, coluna: str) -> str:
     nome_tipo = {
-        "populacao": "População",
-        "renda": "Renda média do responsável",
-        "domicilios": "Domicílios",
+        "populacao": "PopulaÃ§Ã£o",
+        "renda": "Renda mÃ©dia do responsÃ¡vel",
+        "domicilios": "DomicÃ­lios",
         "entorno": "Entorno",
         "cruzar-censo-renda": "Cruzamento Censo x Renda",
-        "cruzar-domicilios-entorno": "Cruzamento Domicílios x Entorno",
+        "cruzar-domicilios-entorno": "Cruzamento DomicÃ­lios x Entorno",
     }
 
-    return f"{nome_tipo.get(tipo, tipo)} — {coluna} — {municipio}"
+    return f"{nome_tipo.get(tipo, tipo)} â€” {coluna} â€” {municipio}"
 
 
 def _exportar_mapa(mapa, tipo: str, municipio: str, coluna: str):
@@ -83,7 +84,7 @@ def gerar_mapa(
         chave="CD_SETOR",
     )
 
-    titulo = montar_titulo(tipo, municipio, coluna)
+    titulo, subtitulo, legenda = obter_textos_padronizados(coluna, municipio)
     arquivo = _exportar_mapa(mapa, tipo, municipio, coluna)
     imagem = (
         PASTA_EXPORTACOES_MAPAS
@@ -94,15 +95,15 @@ def gerar_mapa(
         mapa=mapa,
         coluna=coluna,
         titulo=titulo,
-        legenda_titulo=coluna,
+        legenda_titulo=legenda,
         arquivo_saida=imagem,
-        subtitulo="Distribuição por setor censitário",
+        subtitulo="DistribuiÃ§Ã£o por setor censitÃ¡rio",
         tema=tipo,
     )
 
 
 def gerar_mapa_pronto(mapa, coluna, tipo, municipio):
-    titulo = montar_titulo(tipo, municipio, coluna)
+    titulo, subtitulo, legenda = obter_textos_padronizados(coluna, municipio)
     arquivo = _exportar_mapa(mapa, tipo, municipio, coluna)
     imagem = (
         PASTA_EXPORTACOES_MAPAS
@@ -113,9 +114,9 @@ def gerar_mapa_pronto(mapa, coluna, tipo, municipio):
         mapa=mapa,
         coluna=coluna,
         titulo=titulo,
-        legenda_titulo=coluna,
+        legenda_titulo=legenda,
         arquivo_saida=imagem,
-        subtitulo="Integração de indicadores por setor censitário",
+        subtitulo="IntegraÃ§Ã£o de indicadores por setor censitÃ¡rio",
         tema=tipo,
     )
 
@@ -134,10 +135,10 @@ def escolher_interativo() -> dict:
     for i, tipo in enumerate(tipos, start=1):
         print(f"{i}. {tipo}")
 
-    indice = int(input("Digite o número do tipo de mapa: ").strip())
+    indice = int(input("Digite o nÃºmero do tipo de mapa: ").strip())
     tipo = tipos[indice - 1]
 
-    municipio = input("Digite o nome ou código IBGE do município: ").strip()
+    municipio = input("Digite o nome ou cÃ³digo IBGE do municÃ­pio: ").strip()
     estado = input("Digite a sigla do estado (opcional): ").strip() or None
     variavel = None
     variavel_domicilios = None
@@ -145,11 +146,11 @@ def escolher_interativo() -> dict:
     coluna_plot = None
 
     if tipo in {"domicilios", "entorno"}:
-        variavel = input("Digite a variável a ser mapeada (por exemplo V00090 ou V05200): ").strip()
+        variavel = input("Digite a variÃ¡vel a ser mapeada (por exemplo V00090 ou V05200): ").strip()
 
     if tipo == "cruzar-domicilios-entorno":
-        variavel_domicilios = input("Digite a variável de domicílios: ").strip()
-        variavel_entorno = input("Digite a variável de entorno: ").strip()
+        variavel_domicilios = input("Digite a variÃ¡vel de domicÃ­lios: ").strip()
+        variavel_entorno = input("Digite a variÃ¡vel de entorno: ").strip()
         coluna_plot = input("Digite a coluna a plotar no resultado do cruzamento (ou deixe vazio): ").strip() or None
 
     return {
@@ -165,7 +166,7 @@ def escolher_interativo() -> dict:
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Gerador interativo de mapas temáticos para IBGE."
+        description="Gerador interativo de mapas temÃ¡ticos para IBGE."
     )
 
     parser.add_argument(
@@ -183,23 +184,23 @@ def main() -> None:
     parser.add_argument(
         "--municipio",
         default="4115200",
-        help="Nome ou código IBGE do município.",
+        help="Nome ou cÃ³digo IBGE do municÃ­pio.",
     )
     parser.add_argument(
         "--estado",
-        help="Sigla do estado para busca de municípios (em desenvolvimento).",
+        help="Sigla do estado para busca de municÃ­pios (em desenvolvimento).",
     )
     parser.add_argument(
         "--variavel",
-        help="Variável para domicílios ou entorno.",
+        help="VariÃ¡vel para domicÃ­lios ou entorno.",
     )
     parser.add_argument(
         "--variavel-domicilios",
-        help="Variável de domicílios para cruzamento.",
+        help="VariÃ¡vel de domicÃ­lios para cruzamento.",
     )
     parser.add_argument(
         "--variavel-entorno",
-        help="Variável de entorno para cruzamento.",
+        help="VariÃ¡vel de entorno para cruzamento.",
     )
     parser.add_argument(
         "--coluna-plot",

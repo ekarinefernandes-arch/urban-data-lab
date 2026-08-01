@@ -13,8 +13,15 @@ SUPPORTED_GEOMETRY_EXTENSIONS = {".gpkg", ".shp"}
 def _listar_arquivos_geografia() -> list[Path]:
     caminhos = []
     for ext in SUPPORTED_GEOMETRY_EXTENSIONS:
-        caminhos.extend(PASTA_GEOGRAFIA.glob(f"*{ext}"))
+        caminhos.extend(PASTA_GEOGRAFIA.rglob(f"*{ext}"))
     return sorted(caminhos)
+
+
+def _pertence_ao_estado(arquivo: Path, estado: str) -> bool:
+    """Identifica a UF pela pasta ou, por compatibilidade, pelo nome do arquivo."""
+    partes = {parte.upper() for parte in arquivo.relative_to(PASTA_GEOGRAFIA).parts[:-1]}
+    nome = arquivo.stem.upper()
+    return estado in partes or nome.startswith(estado) or nome.endswith(estado)
 
 
 def localizar_arquivo_geografia(estado: str | None = None) -> Path:
@@ -54,10 +61,13 @@ def localizar_arquivo_geografia(estado: str | None = None) -> Path:
         )
 
     estado = estado.strip().upper()
-    for arquivo in arquivos:
-        nome = arquivo.stem.upper()
-        if nome.startswith(estado) or nome.endswith(estado):
-            return arquivo
+    candidatos = [
+        arquivo for arquivo in arquivos if _pertence_ao_estado(arquivo, estado)
+    ]
+    if candidatos:
+        # GeoPackage é autocontido e deve prevalecer sobre um Shapefile equivalente.
+        candidatos.sort(key=lambda arquivo: (arquivo.suffix.lower() != ".gpkg", str(arquivo)))
+        return candidatos[0]
 
     disponiveis = ", ".join(arquivo.name for arquivo in arquivos)
     raise ValueError(

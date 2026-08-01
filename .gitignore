@@ -19,6 +19,13 @@ data/raw/*
 data/processed/*
 data/exports/*
 
+# Mantém no repositório a organização das malhas por abrangência territorial
+!data/raw/geografia/
+data/raw/geografia/*
+!data/raw/geografia/*/
+data/raw/geografia/*/*
+!data/raw/geografia/*/.gitkeep
+
 # Mantém as pastas no Git mesmo quando vazias
 !data/raw/.gitkeep
 !data/processed/.gitkeep

@@ -24,6 +24,7 @@ from modules.ibge.cruzamento import (
 )
 from modules.visualizacao.mapas import (
     exportar_gpkg,
+    obter_textos_padronizados,
     plotar_mapa,
     preparar_mapa_tematico,
 )
@@ -108,7 +109,10 @@ def gerar_mapa_simples(
         chave="CD_SETOR",
     )
 
-    legenda_titulo = montar_legenda(tipo, coluna)
+    titulo, subtitulo, legenda_titulo = obter_textos_padronizados(
+        coluna,
+        municipio,
+    )
 
     print(f"Gerando mapa: {titulo}")
     arquivo = _exportar_mapa(mapa, tipo, municipio, coluna)
@@ -123,7 +127,7 @@ def gerar_mapa_simples(
         titulo,
         legenda_titulo=legenda_titulo,
         arquivo_saida=imagem,
-        subtitulo="Distribuição por setor censitário",
+        subtitulo=subtitulo,
         tema=tipo,
     )
 
@@ -135,7 +139,10 @@ def gerar_mapa_cruzamento(
     tipo,
     municipio,
 ):
-    legenda_titulo = montar_legenda(tipo, coluna)
+    titulo, subtitulo, legenda_titulo = obter_textos_padronizados(
+        coluna,
+        municipio,
+    )
     print(f"Gerando mapa de cruzamento: {tipo}")
     arquivo = _exportar_mapa(mapa, tipo, municipio, coluna)
     imagem = (
@@ -146,10 +153,10 @@ def gerar_mapa_cruzamento(
     plotar_mapa(
         mapa,
         coluna,
-        tipo.replace("_", " ").title(),
+        titulo,
         legenda_titulo=legenda_titulo,
         arquivo_saida=imagem,
-        subtitulo="Integração de indicadores por setor censitário",
+        subtitulo=subtitulo,
         tema=tipo,
     )
 
@@ -217,7 +224,7 @@ def main() -> None:
             coluna="populacao",
             titulo=f"População por setor — {nome_municipio}",
             tipo="populacao",
-            municipio=args.municipio,
+            municipio=nome_municipio,
         )
         return
 
@@ -230,7 +237,7 @@ def main() -> None:
             coluna=coluna,
             titulo=f"Renda por setor — {nome_municipio}",
             tipo="renda",
-            municipio=args.municipio,
+            municipio=nome_municipio,
         )
         return
 
@@ -249,7 +256,7 @@ def main() -> None:
             coluna=args.variavel,
             titulo=f"Domicílios por setor — {nome_municipio}",
             tipo="domicilios",
-            municipio=args.municipio,
+            municipio=nome_municipio,
         )
         return
 
@@ -268,7 +275,7 @@ def main() -> None:
             coluna=args.variavel,
             titulo=f"Entorno por setor — {nome_municipio}",
             tipo="entorno",
-            municipio=args.municipio,
+            municipio=nome_municipio,
         )
         return
 
@@ -288,7 +295,7 @@ def main() -> None:
             mapa=mapa,
             coluna=coluna,
             tipo="cruzar_censo_renda",
-            municipio=args.municipio,
+            municipio=nome_municipio,
         )
         return
 
@@ -314,7 +321,7 @@ def main() -> None:
             mapa=mapa,
             coluna=coluna,
             tipo="cruzar_domicilios_entorno",
-            municipio=args.municipio,
+            municipio=nome_municipio,
         )
         return
 

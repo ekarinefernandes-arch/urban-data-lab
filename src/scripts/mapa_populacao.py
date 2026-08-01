@@ -19,6 +19,7 @@ from modules.ibge.pipeline import construir_dataset_populacao
 from modules.visualizacao.mapas import (
     calcular_densidade_populacional,
     exportar_gpkg,
+    obter_textos_padronizados,
     plotar_mapa,
     preparar_mapa_tematico,
 )
@@ -155,19 +156,21 @@ print(
 # MAPA TEMÁTICO
 # --------------------------------------------------
 
+titulo, subtitulo, legenda = obter_textos_padronizados(
+    "densidade_pop_km2",
+    nome_municipio,
+)
+
 plotar_mapa(
     mapa=mapa,
     coluna="densidade_pop_km2",
-    titulo=(
-        f"População por setor censitário — {nome_municipio}\n"
-        "Censo Demográfico 2022"
-    ),
-    legenda_titulo="Habitantes por km² (quantis)",
+    titulo=titulo,
+    legenda_titulo=legenda,
     arquivo_saida=(
         PASTA_EXPORTACOES_MAPAS
         / "populacao"
         / f"populacao_{nome_arquivo}.png"
     ),
-    subtitulo="Densidade populacional por setor censitário",
+    subtitulo=subtitulo,
     tema="densidade",
 )
